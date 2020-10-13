@@ -1,6 +1,7 @@
 // half - IEEE 754-based half-precision floating-point library.
 //
 // Copyright (c) 2012-2019 Christian Rau <rauy@users.sourceforge.net>
+// Copyright (c) 2020 0xBYTESHIFT
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation 
 // files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, 
@@ -13,8 +14,6 @@
 // WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-// Version 2.1.1 //removed legacy, forked for github
 
 /// \file
 /// Main header file for half-precision functionality.
@@ -74,60 +73,6 @@
 	///
 	/// Unless predefined it will be enabled automatically when the `__F16C__` symbol is defined, which some compilers do on supporting platforms.
 	#define HALF_ENABLE_F16C_INTRINSICS __F16C__
-#endif
-
-#ifdef HALF_DOXYGEN_ONLY
-/// Type for internal floating-point computations.
-/// This can be predefined to a built-in floating-point type (`float`, `double` or `long double`) to override the internal 
-/// half-precision implementation to use this type for computing arithmetic operations and mathematical function (if available). 
-/// This can result in improved performance for arithmetic operators and mathematical functions but might cause results to 
-/// deviate from the specified half-precision rounding mode and inhibits proper detection of half-precision exceptions.
-#define HALF_ARITHMETIC_TYPE (undefined)
-
-/// Enable internal exception flags.
-/// Defining this to 1 causes operations on half-precision values to raise internal floating-point exception flags according to 
-/// the IEEE 754 standard. These can then be cleared and checked with clearexcept(), testexcept().
-#define HALF_ERRHANDLING_FLAGS	0
-
-/// Enable exception propagation to `errno`.
-/// Defining this to 1 causes operations on half-precision values to propagate floating-point exceptions to 
-/// [errno](https://en.cppreference.com/w/cpp/error/errno) from `<cerrno>`. Specifically this will propagate domain errors as 
-/// [EDOM](https://en.cppreference.com/w/cpp/error/errno_macros) and pole, overflow and underflow errors as 
-/// [ERANGE](https://en.cppreference.com/w/cpp/error/errno_macros). Inexact errors won't be propagated.
-#define HALF_ERRHANDLING_ERRNO	0
-
-/// Enable exception propagation to built-in floating-point platform.
-/// Defining this to 1 causes operations on half-precision values to propagate floating-point exceptions to the built-in 
-/// single- and double-precision implementation's exception flags using the 
-/// [C++11 floating-point environment control](https://en.cppreference.com/w/cpp/numeric/fenv) from `<cfenv>`. However, this 
-/// does not work in reverse and single- or double-precision exceptions will not raise the corresponding half-precision 
-/// exception flags, nor will explicitly clearing flags clear the corresponding built-in flags.
-#define HALF_ERRHANDLING_FENV	0
-
-/// Throw C++ exception on domain errors.
-/// Defining this to a string literal causes operations on half-precision values to throw a 
-/// [std::domain_error](https://en.cppreference.com/w/cpp/error/domain_error) with the specified message on domain errors.
-#define HALF_ERRHANDLING_THROW_INVALID		(undefined)
-
-/// Throw C++ exception on pole errors.
-/// Defining this to a string literal causes operations on half-precision values to throw a 
-/// [std::domain_error](https://en.cppreference.com/w/cpp/error/domain_error) with the specified message on pole errors.
-#define HALF_ERRHANDLING_THROW_DIVBYZERO	(undefined)
-
-/// Throw C++ exception on overflow errors.
-/// Defining this to a string literal causes operations on half-precision values to throw a 
-/// [std::overflow_error](https://en.cppreference.com/w/cpp/error/overflow_error) with the specified message on overflows.
-#define HALF_ERRHANDLING_THROW_OVERFLOW		(undefined)
-
-/// Throw C++ exception on underflow errors.
-/// Defining this to a string literal causes operations on half-precision values to throw a 
-/// [std::underflow_error](https://en.cppreference.com/w/cpp/error/underflow_error) with the specified message on underflows.
-#define HALF_ERRHANDLING_THROW_UNDERFLOW	(undefined)
-
-/// Throw C++ exception on rounding errors.
-/// Defining this to 1 causes operations on half-precision values to throw a 
-/// [std::range_error](https://en.cppreference.com/w/cpp/error/range_error) with the specified message on general rounding errors.
-#define HALF_ERRHANDLING_THROW_INEXACT		(undefined)
 #endif
 
 #ifndef HALF_ERRHANDLING_OVERFLOW_TO_INEXACT
@@ -241,7 +186,7 @@ namespace half_float {
 	/// \brief Implementation details.
 	namespace detail {
 		/// Conditional type.
-		template<bool B,typename T,typename F> struct conditional : std::conditional<B,T,F> {};
+		template<bool B, class T, class F> struct conditional : std::conditional<B,T,F> {};
 
 		/// Helper for tag dispatching.
 		template<bool B> struct bool_type : std::integral_constant<bool,B> {};
@@ -249,28 +194,29 @@ namespace half_float {
 		using std::false_type;
 
 		/// Type traits for floating-point types.
-		template<typename T> struct is_float : std::is_floating_point<T> {};
+		template<class T> struct is_float : std::is_floating_point<T> {};
 
 		/// Type traits for floating-point bits.
-		template<typename T> struct bits { typedef unsigned char type; };
-		template<typename T> struct bits<const T> : bits<T> {};
-		template<typename T> struct bits<volatile T> : bits<T> {};
-		template<typename T> struct bits<const volatile T> : bits<T> {};
+		template<class T> struct bits { using type = unsigned char; };
+		template<class T> struct bits<const T> : bits<T> {};
+		template<class T> struct bits<volatile T> : bits<T> {};
+		template<class T> struct bits<const volatile T> : bits<T> {};
 
 		/// Unsigned integer of (at least) 16 bits width.
-		typedef std::uint_least16_t uint16;
+		using uint16 = std::uint_least16_t;
 
 		/// Fastest unsigned integer of (at least) 32 bits width.
-		typedef std::uint_fast32_t uint32;
+		using uint32 = std::uint_fast32_t;
 
 		/// Fastest signed integer of (at least) 32 bits width.
-		typedef std::int_fast32_t int32;
+		using int32 = std::int_fast32_t;
 
 		/// Unsigned integer of (at least) 32 bits width.
-		template<> struct bits<float> { typedef std::uint_least32_t type; };
+		template<> struct bits<float> { using type = std::uint_least32_t; };
 
 		/// Unsigned integer of (at least) 64 bits width.
-		template<> struct bits<double> { typedef std::uint_least64_t type; };
+		template<> struct bits<double> { using type = std::uint_least64_t; };
+		template<class T> using bits_t = typename bits<T>::type;
 
 	#ifdef HALF_ARITHMETIC_TYPE
 		/// Type to use for arithmetic computations and mathematic functions internally.
@@ -291,27 +237,21 @@ namespace half_float {
 		/// \param arg value to query
 		/// \retval true if infinity
 		/// \retval false else
-		template<typename T> bool builtin_isinf(T arg) {
-			return std::isinf(arg);
-		}
+		template<class T> bool builtin_isinf(T arg) { return std::isinf(arg); }
 
 		/// Check for NaN.
 		/// \tparam T argument type (builtin floating-point type)
 		/// \param arg value to query
 		/// \retval true if not a number
 		/// \retval false else
-		template<typename T> bool builtin_isnan(T arg) {
-			return std::isnan(arg);
-		}
+		template<class T> bool builtin_isnan(T arg) { return std::isnan(arg); }
 
 		/// Check sign.
 		/// \tparam T argument type (builtin floating-point type)
 		/// \param arg value to query
 		/// \retval true if signbit set
 		/// \retval false else
-		template<typename T> bool builtin_signbit(T arg) {
-			return std::signbit(arg);
-		}
+		template<class T> bool builtin_signbit(T arg) { return std::signbit(arg); }
 
 		/// Platform-independent sign mask.
 		/// \param arg integer value in two's complement
@@ -624,7 +564,7 @@ namespace half_float {
 				(R==std::round_toward_neg_infinity) ? _MM_FROUND_TO_NEG_INF :
 				_MM_FROUND_CUR_DIRECTION));
 		#else
-			bits<float>::type fbits;
+			bits_t<float> fbits;
 			std::memcpy(&fbits, &value, sizeof(float));
 		#if 1
 			unsigned int sign = (fbits>>16) & 0x8000;
@@ -707,7 +647,7 @@ namespace half_float {
 			if(R == std::round_indeterminate)
 				return _mm_cvtsi128_si32(_mm_cvtps_ph(_mm_cvtpd_ps(_mm_set_sd(value)), _MM_FROUND_CUR_DIRECTION));
 		#endif
-			bits<double>::type dbits;
+			bits_t<double> dbits;
 			std::memcpy(&dbits, &value, sizeof(double));
 			uint32 hi = dbits >> 32, lo = dbits & 0xFFFFFFFF;
 			unsigned int sign = (hi>>16) & 0x8000;
@@ -736,7 +676,7 @@ namespace half_float {
 		/// \exception FE_OVERFLOW on overflows
 		/// \exception FE_UNDERFLOW on underflows
 		/// \exception FE_INEXACT if value had to be rounded
-		template<std::float_round_style R,typename T> unsigned int float2half_impl(T value, ...) {
+		template<std::float_round_style R,class T> unsigned int float2half_impl(T value, ...) {
 			unsigned int hbits = static_cast<unsigned>(builtin_signbit(value)) << 15;
 			if(value == T())
 				return hbits;
@@ -767,11 +707,11 @@ namespace half_float {
 		/// \exception FE_OVERFLOW on overflows
 		/// \exception FE_UNDERFLOW on underflows
 		/// \exception FE_INEXACT if value had to be rounded
-		template<std::float_round_style R,typename T> unsigned int float2half(T value) {
-			return float2half_impl<R>(value, bool_type<std::numeric_limits<T>::is_iec559&&sizeof(typename bits<T>::type)==sizeof(T)>());
+		template<std::float_round_style R,class T> unsigned int float2half(T value) {
+			return float2half_impl<R>(value, bool_type<std::numeric_limits<T>::is_iec559&&sizeof(bits_t<T>)==sizeof(T)>());
 		}
-		template<typename T> unsigned int float2half(T value) {
-			return float2half_impl<(std::float_round_style)(HALF_ROUND_STYLE)>(value, bool_type<std::numeric_limits<T>::is_iec559&&sizeof(typename bits<T>::type)==sizeof(T)>());
+		template<class T> unsigned int float2half(T value) {
+			return float2half_impl<(std::float_round_style)(HALF_ROUND_STYLE)>(value, bool_type<std::numeric_limits<T>::is_iec559&&sizeof(bits_t<T>)==sizeof(T)>());
 		}
 
 		/// Convert integer to half-precision floating-point.
@@ -781,7 +721,7 @@ namespace half_float {
 		/// \return rounded half-precision value
 		/// \exception FE_OVERFLOW on overflows
 		/// \exception FE_INEXACT if value had to be rounded
-		template<std::float_round_style R,typename T> unsigned int int2half(T value) {
+		template<std::float_round_style R,class T> unsigned int int2half(T value) {
 			unsigned int bits = static_cast<unsigned>(value<0) << 15;
 			if(!value)
 				return bits;
@@ -805,16 +745,16 @@ namespace half_float {
 			return _mm_cvtss_f32(_mm_cvtph_ps(_mm_cvtsi32_si128(value)));
 		#else
 		#if 0
-			bits<float>::type fbits = static_cast<bits<float>::type>(value&0x8000) << 16;
+			bits_t<float> fbits = static_cast<bits_t<float>>(value&0x8000) << 16;
 			int abs = value & 0x7FFF;
 			if(abs)
 			{
 				fbits |= 0x38000000 << static_cast<unsigned>(abs>=0x7C00);
 				for(; abs<0x400; abs<<=1,fbits-=0x800000) ;
-				fbits += static_cast<bits<float>::type>(abs) << 13;
+				fbits += static_cast<bits_t<float>>(abs) << 13;
 			}
 		#else
-			static const bits<float>::type mantissa_table[2048] = {
+			static const bits_t<float> mantissa_table[2048] = {
 				0x00000000, 0x33800000, 0x34000000, 0x34400000, 0x34800000, 0x34A00000, 0x34C00000, 0x34E00000, 0x35000000, 0x35100000, 0x35200000, 0x35300000, 0x35400000, 0x35500000, 0x35600000, 0x35700000, 
 				0x35800000, 0x35880000, 0x35900000, 0x35980000, 0x35A00000, 0x35A80000, 0x35B00000, 0x35B80000, 0x35C00000, 0x35C80000, 0x35D00000, 0x35D80000, 0x35E00000, 0x35E80000, 0x35F00000, 0x35F80000, 
 				0x36000000, 0x36040000, 0x36080000, 0x360C0000, 0x36100000, 0x36140000, 0x36180000, 0x361C0000, 0x36200000, 0x36240000, 0x36280000, 0x362C0000, 0x36300000, 0x36340000, 0x36380000, 0x363C0000, 
@@ -943,7 +883,7 @@ namespace half_float {
 				0x387A0000, 0x387A2000, 0x387A4000, 0x387A6000, 0x387A8000, 0x387AA000, 0x387AC000, 0x387AE000, 0x387B0000, 0x387B2000, 0x387B4000, 0x387B6000, 0x387B8000, 0x387BA000, 0x387BC000, 0x387BE000, 
 				0x387C0000, 0x387C2000, 0x387C4000, 0x387C6000, 0x387C8000, 0x387CA000, 0x387CC000, 0x387CE000, 0x387D0000, 0x387D2000, 0x387D4000, 0x387D6000, 0x387D8000, 0x387DA000, 0x387DC000, 0x387DE000, 
 				0x387E0000, 0x387E2000, 0x387E4000, 0x387E6000, 0x387E8000, 0x387EA000, 0x387EC000, 0x387EE000, 0x387F0000, 0x387F2000, 0x387F4000, 0x387F6000, 0x387F8000, 0x387FA000, 0x387FC000, 0x387FE000 };
-			static const bits<float>::type exponent_table[64] = {
+			static const bits_t<float> exponent_table[64] = {
 				0x00000000, 0x00800000, 0x01000000, 0x01800000, 0x02000000, 0x02800000, 0x03000000, 0x03800000, 0x04000000, 0x04800000, 0x05000000, 0x05800000, 0x06000000, 0x06800000, 0x07000000, 0x07800000, 
 				0x08000000, 0x08800000, 0x09000000, 0x09800000, 0x0A000000, 0x0A800000, 0x0B000000, 0x0B800000, 0x0C000000, 0x0C800000, 0x0D000000, 0x0D800000, 0x0E000000, 0x0E800000, 0x0F000000, 0x47800000, 
 				0x80000000, 0x80800000, 0x81000000, 0x81800000, 0x82000000, 0x82800000, 0x83000000, 0x83800000, 0x84000000, 0x84800000, 0x85000000, 0x85800000, 0x86000000, 0x86800000, 0x87000000, 0x87800000, 
@@ -951,7 +891,7 @@ namespace half_float {
 			static const unsigned short offset_table[64] = {
 				0, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 
 				0, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024 };
-			bits<float>::type fbits = mantissa_table[offset_table[value>>10]+(value&0x3FF)] + exponent_table[value>>10];
+			bits_t<float> fbits = mantissa_table[offset_table[value>>10]+(value&0x3FF)] + exponent_table[value>>10];
 		#endif
 			float out;
 			std::memcpy(&out, &fbits, sizeof(float));
@@ -973,7 +913,7 @@ namespace half_float {
 				for(; abs<0x400; abs<<=1,hi-=0x100000) ;
 				hi += static_cast<uint32>(abs) << 10;
 			}
-			bits<double>::type dbits = static_cast<bits<double>::type>(hi) << 32;
+			bits_t<double> dbits = static_cast<bits_t<double>>(hi) << 32;
 			double out;
 			std::memcpy(&out, &dbits, sizeof(double));
 			return out;
@@ -984,7 +924,7 @@ namespace half_float {
 		/// \tparam T type to convert to (builtin integer type)
 		/// \param value half-precision value to convert
 		/// \return floating-point value
-		template<typename T> T half2float_impl(unsigned int value, T, ...) {
+		template<class T> T half2float_impl(unsigned int value, T, ...) {
 			T out;
 			unsigned int abs = value & 0x7FFF;
 			if(abs > 0x7C00)
@@ -1003,8 +943,8 @@ namespace half_float {
 		/// \tparam T type to convert to (builtin integer type)
 		/// \param value half-precision value to convert
 		/// \return floating-point value
-		template<typename T> T half2float(unsigned int value) {
-			return half2float_impl(value, T(), bool_type<std::numeric_limits<T>::is_iec559&&sizeof(typename bits<T>::type)==sizeof(T)>());
+		template<class T> T half2float(unsigned int value) {
+			return half2float_impl(value, T(), bool_type<std::numeric_limits<T>::is_iec559&&sizeof(bits_t<T>)==sizeof(T)>());
 		}
 
 		/// Convert half-precision floating-point to integer.
@@ -1016,7 +956,7 @@ namespace half_float {
 		/// \return rounded integer value
 		/// \exception FE_INVALID if value is not representable in type \a T
 		/// \exception FE_INEXACT if value had to be rounded and \a I is `true`
-		template<std::float_round_style R,bool E,bool I,typename T> T half2int(unsigned int value) {
+		template<std::float_round_style R,bool E,bool I,class T> T half2int(unsigned int value) {
 			unsigned int abs = value & 0x7FFF;
 			if(abs >= 0x7C00) {
 				raise(FE_INVALID);
@@ -1626,7 +1566,7 @@ namespace half_float {
 		}
 		/// \}
 
-		template<typename,typename,std::float_round_style> struct half_caster;
+		template<class,class,std::float_round_style> struct half_caster;
 	}
 
 	/// Half-precision floating-point type.
@@ -1659,8 +1599,14 @@ namespace half_float {
 		/// Conversion constructor.
 		/// \param rhs float to convert
 		/// \exception FE_OVERFLOW, ...UNDERFLOW, ...INEXACT according to rounding
-		explicit half(float rhs) : data_(static_cast<detail::uint16>(detail::float2half<round_style>(rhs))) {}
-	
+		//explicit half(float rhs) : data_(static_cast<detail::uint16>(detail::float2half<round_style>(rhs))) {}
+
+		/// Conversion constructor.
+		/// \param rhs float to convert
+		/// \exception FE_OVERFLOW, ...UNDERFLOW, ...INEXACT according to rounding
+		template<class T>
+		half(T rhs) : data_(static_cast<detail::uint16>(detail::float2half<round_style>(static_cast<float>(rhs)))) {}
+
 		/// Conversion to single-precision.
 		/// \return single precision value representing expression value
 		operator float() const { return detail::half2float<float>(data_); }
@@ -1670,6 +1616,9 @@ namespace half_float {
 		/// \return reference to this half
 		/// \exception FE_OVERFLOW, ...UNDERFLOW, ...INEXACT according to rounding
 		half& operator=(const float &rhs) { data_ = static_cast<detail::uint16>(detail::float2half<round_style>(rhs)); return *this; }
+
+		template<class T>
+		half& operator=(const T &rhs) { return *this = static_cast<float>(rhs); }
 
 		/// \}
 		/// \name Arithmetic updates
@@ -1703,6 +1652,7 @@ namespace half_float {
 		/// \exception FE_... according to operator/(half,half)
 		half& operator/=(half rhs) { return *this = *this / rhs; }
 
+		/*
 		/// Arithmetic assignment.
 		/// \param rhs single-precision value to add
 		/// \return reference to this half
@@ -1726,6 +1676,7 @@ namespace half_float {
 		/// \return reference to this half
 		/// \exception FE_... according to operator=()
 		half& operator/=(float rhs) { return *this = *this / rhs; }
+		*/
 
 		/// \}
 		/// \name Increment and decrement
@@ -1764,20 +1715,40 @@ namespace half_float {
 		/// Internal binary representation
 		detail::uint16 data_;
 
-	#ifndef HALF_DOXYGEN_ONLY
 		friend constexpr_NOERR bool operator==(half, half);
+		template<class T> friend constexpr_NOERR bool operator==(half, T);
+		template<class T> friend constexpr_NOERR bool operator==(T, half);
 		friend constexpr_NOERR bool operator!=(half, half);
+		template<class T> friend constexpr_NOERR bool operator!=(half, T);
+		template<class T> friend constexpr_NOERR bool operator!=(T, half);
 		friend constexpr_NOERR bool operator<(half, half);
+		template<class T> friend constexpr_NOERR bool operator<(half, T);
+		template<class T> friend constexpr_NOERR bool operator<(T, half);
 		friend constexpr_NOERR bool operator>(half, half);
+		template<class T> friend constexpr_NOERR bool operator>(half, T);
+		template<class T> friend constexpr_NOERR bool operator>(T, half);
 		friend constexpr_NOERR bool operator<=(half, half);
+		template<class T> friend constexpr_NOERR bool operator<=(half, T);
+		template<class T> friend constexpr_NOERR bool operator<=(T, half);
 		friend constexpr_NOERR bool operator>=(half, half);
+		template<class T> friend constexpr_NOERR bool operator>=(half, T);
+		template<class T> friend constexpr_NOERR bool operator>=(T, half);
+		friend constexpr half operator+(half);
 		friend constexpr half operator-(half);
 		friend half operator+(half, half);
+		template<class T> friend half operator+(half, T);
+		template<class T> friend half operator+(T, half);
 		friend half operator-(half, half);
+		template<class T> friend half operator-(half, T);
+		template<class T> friend half operator-(T, half);
 		friend half operator*(half, half);
+		template<class T> friend half operator*(half, T);
+		template<class T> friend half operator*(T, half);
 		friend half operator/(half, half);
-		template<typename charT,typename traits> friend std::basic_ostream<charT,traits>& operator<<(std::basic_ostream<charT,traits>&, half);
-		template<typename charT,typename traits> friend std::basic_istream<charT,traits>& operator>>(std::basic_istream<charT,traits>&, half&);
+		template<class T> friend half operator/(half, T);
+		template<class T> friend half operator/(T, half);
+		template<class charT,class traits> friend std::basic_ostream<charT,traits>& operator<<(std::basic_ostream<charT,traits>&, half);
+		template<class charT,class traits> friend std::basic_istream<charT,traits>& operator>>(std::basic_istream<charT,traits>&, half&);
 		friend constexpr half fabs(half);
 		friend half fmod(half, half);
 		friend half remainder(half, half);
@@ -1846,11 +1817,10 @@ namespace half_float {
 		friend constexpr bool isless(half, half);
 		friend constexpr bool islessequal(half, half);
 		friend constexpr bool islessgreater(half, half);
-		template<typename,typename,std::float_round_style> friend struct detail::half_caster;
+		template<class,class,std::float_round_style> friend struct detail::half_caster;
 		friend class std::numeric_limits<half>;
 		friend struct std::hash<half>;
 		friend half literal::operator "" _h(long double);
-	#endif
 	};
 
 	namespace literal {
@@ -1871,15 +1841,15 @@ namespace half_float {
 		/// \tparam T destination type
 		/// \tparam U source type
 		/// \tparam R rounding mode to use
-		template<typename T,typename U,std::float_round_style R=(std::float_round_style)(HALF_ROUND_STYLE)> struct half_caster {};
-		template<typename U,std::float_round_style R> struct half_caster<half,U,R> {
+		template<class T,class U,std::float_round_style R=(std::float_round_style)(HALF_ROUND_STYLE)> struct half_caster {};
+		template<class U,std::float_round_style R> struct half_caster<half,U,R> {
 			static_assert(std::is_arithmetic<U>::value, "half_cast from non-arithmetic type unsupported");
 			static half cast(U arg) { return cast_impl(arg, is_float<U>()); };
 		private:
 			static half cast_impl(U arg, true_type) { return half(binary, float2half<R>(arg)); }
 			static half cast_impl(U arg, false_type) { return half(binary, int2half<R>(arg)); }
 		};
-		template<typename T,std::float_round_style R> struct half_caster<T,half,R> {
+		template<class T,std::float_round_style R> struct half_caster<T,half,R> {
 			static_assert(std::is_arithmetic<T>::value, "half_cast to non-arithmetic type unsupported");
 			static T cast(half arg) { return cast_impl(arg, is_float<T>()); }
 		private:
@@ -2026,6 +1996,10 @@ namespace std {
 	/// is_arithmetic specialization for half-precision floats.
 	template<> struct is_arithmetic<half_float::half>:
 		std::integral_constant<bool, true> {};
+
+	/// is_signed specialization for half-precision floats.
+	template<> struct is_signed<half_float::half>:
+		std::integral_constant<bool, true> {};
 }
 
 namespace half_float {
@@ -2042,6 +2016,10 @@ namespace half_float {
 	inline constexpr_NOERR bool operator==(half x, half y) {
 		return !detail::compsignal(x.data_, y.data_) && (x.data_==y.data_ || !((x.data_|y.data_)&0x7FFF));
 	}
+	template<class T>
+	inline constexpr_NOERR bool operator==(half x, T y) { return x == static_cast<half>(y); }
+	template<class T>
+	inline constexpr_NOERR bool operator==(T x, half y) { return static_cast<half>(x) == y; }
 
 	/// Comparison for inequality.
 	/// \param x first operand
@@ -2052,6 +2030,10 @@ namespace half_float {
 	inline constexpr_NOERR bool operator!=(half x, half y) {
 		return detail::compsignal(x.data_, y.data_) || (x.data_!=y.data_ && ((x.data_|y.data_)&0x7FFF));
 	}
+	template<class T>
+	inline constexpr_NOERR bool operator!=(half x, T y) { return x != static_cast<half>(y); }
+	template<class T>
+	inline constexpr_NOERR bool operator!=(T x, half y) { return static_cast<half>(x) != y; }
 
 	/// Comparison for less than.
 	/// \param x first operand
@@ -2063,6 +2045,10 @@ namespace half_float {
 		return !detail::compsignal(x.data_, y.data_) &&
 			((x.data_^(0x8000|(0x8000-(x.data_>>15))))+(x.data_>>15)) < ((y.data_^(0x8000|(0x8000-(y.data_>>15))))+(y.data_>>15));
 	}
+	template<class T>
+	inline constexpr_NOERR bool operator<(half x, T y) { return x < static_cast<half>(y); }
+	template<class T>
+	inline constexpr_NOERR bool operator<(T x, half y) { return static_cast<half>(x) < y; }
 
 	/// Comparison for greater than.
 	/// \param x first operand
@@ -2074,6 +2060,10 @@ namespace half_float {
 		return !detail::compsignal(x.data_, y.data_) &&
 			((x.data_^(0x8000|(0x8000-(x.data_>>15))))+(x.data_>>15)) > ((y.data_^(0x8000|(0x8000-(y.data_>>15))))+(y.data_>>15));
 	}
+	template<class T>
+	inline constexpr_NOERR bool operator>(half x, T y) { return x > static_cast<half>(y); }
+	template<class T>
+	inline constexpr_NOERR bool operator>(T x, half y) { return static_cast<half>(x) > y; }
 
 	/// Comparison for less equal.
 	/// \param x first operand
@@ -2085,6 +2075,10 @@ namespace half_float {
 		return !detail::compsignal(x.data_, y.data_) &&
 			((x.data_^(0x8000|(0x8000-(x.data_>>15))))+(x.data_>>15)) <= ((y.data_^(0x8000|(0x8000-(y.data_>>15))))+(y.data_>>15));
 	}
+	template<class T>
+	inline constexpr_NOERR bool operator<=(half x, T y) { return x <= static_cast<half>(y); }
+	template<class T>
+	inline constexpr_NOERR bool operator<=(T x, half y) { return static_cast<half>(x) <= y; }
 
 	/// Comparison for greater equal.
 	/// \param x first operand
@@ -2096,6 +2090,10 @@ namespace half_float {
 		return !detail::compsignal(x.data_, y.data_) &&
 			((x.data_^(0x8000|(0x8000-(x.data_>>15))))+(x.data_>>15)) >= ((y.data_^(0x8000|(0x8000-(y.data_>>15))))+(y.data_>>15));
 	}
+	template<class T>
+	inline constexpr_NOERR bool operator>=(half x, T y) { return x >= static_cast<half>(y); }
+	template<class T>
+	inline constexpr_NOERR bool operator>=(T x, half y) { return static_cast<half>(x) >= y; }
 
 	/// \}
 	/// \anchor arithmetics
@@ -2155,6 +2153,10 @@ namespace half_float {
 		return half(detail::binary, detail::rounded<half::round_style,false>(sign+((exp-1)<<10)+(mx>>3), (mx>>2)&1, (mx&0x3)!=0));
 	#endif
 	}
+	template<class T>
+	inline half operator+(half x, T y) { return x + static_cast<half>(y); }
+	template<class T>
+	inline half operator+(T x, half y) { return static_cast<half>(x) + y; }
 
 	/// Subtraction.
 	/// This operation is exact to rounding for all rounding modes.
@@ -2167,9 +2169,13 @@ namespace half_float {
 	#ifdef HALF_ARITHMETIC_TYPE
 		return half(detail::binary, detail::float2half<half::round_style>(detail::half2float<detail::internal_t>(x.data_)-detail::half2float<detail::internal_t>(y.data_)));
 	#else
-		return x + -y;
+		return x + (-y);
 	#endif
 	}
+	template<class T>
+	inline half operator-(half x, T y) { return x - static_cast<half>(y); }
+	template<class T>
+	inline half operator-(T x, half y) { return static_cast<half>(x) - y; }
 
 	/// Multiplication.
 	/// This operation is exact to rounding for all rounding modes.
@@ -2201,6 +2207,10 @@ namespace half_float {
 		return half(detail::binary, detail::fixed2half<half::round_style,20,false,false,false>(m>>i, exp, sign, s));
 	#endif
 	}
+	template<class T>
+	inline half operator*(half x, T y) { return x * static_cast<half>(y); }
+	template<class T>
+	inline half operator*(T x, half y) { return static_cast<half>(x) * y; }
 
 	/// Division.
 	/// This operation is exact to rounding for all rounding modes.
@@ -2237,6 +2247,10 @@ namespace half_float {
 		return half(detail::binary, detail::fixed2half<half::round_style,11,false,false,false>(mx/my, exp, sign, mx%my!=0));
 	#endif
 	}
+	template<class T>
+	inline half operator/(half x, T y) { return x / static_cast<half>(y); }
+	template<class T>
+	inline half operator/(T x, half y) { return static_cast<half>(x) / y; }
 
 	/// \}
 	/// \anchor streaming
@@ -2248,7 +2262,7 @@ namespace half_float {
 	/// \param out output stream to write into
 	/// \param arg half expression to write
 	/// \return reference to output stream
-	template<typename charT,typename traits> std::basic_ostream<charT,traits>& operator<<(std::basic_ostream<charT,traits> &out, half arg) {
+	template<class charT,class traits> std::basic_ostream<charT,traits>& operator<<(std::basic_ostream<charT,traits> &out, half arg) {
 	#ifdef HALF_ARITHMETIC_TYPE
 		return out << detail::half2float<detail::internal_t>(arg.data_);
 	#else
@@ -2265,7 +2279,7 @@ namespace half_float {
 	/// \param arg half to read into
 	/// \return reference to input stream
 	/// \exception FE_OVERFLOW, ...UNDERFLOW, ...INEXACT according to rounding
-	template<typename charT,typename traits> std::basic_istream<charT,traits>& operator>>(std::basic_istream<charT,traits> &in, half &arg) {
+	template<class charT,class traits> std::basic_istream<charT,traits>& operator>>(std::basic_istream<charT,traits> &in, half &arg) {
 	#ifdef HALF_ARITHMETIC_TYPE
 		detail::internal_t f;
 	#else
@@ -3911,7 +3925,7 @@ namespace half_float {
 	/// \return \a arg converted to destination type
 	/// \exception FE_INVALID if \a T is integer type and result is not representable as \a T
 	/// \exception FE_OVERFLOW, ...UNDERFLOW, ...INEXACT according to rounding
-	template<typename T,typename U> T half_cast(U arg) { return detail::half_caster<T,U>::cast(arg); }
+	template<class T,class U> T half_cast(U arg) { return detail::half_caster<T,U>::cast(arg); }
 
 	/// Cast to or from half-precision floating-point number.
 	/// This casts between [half](\ref half_float::half) and any built-in arithmetic type. The values are converted 
@@ -3927,7 +3941,7 @@ namespace half_float {
 	/// \return \a arg converted to destination type
 	/// \exception FE_INVALID if \a T is integer type and result is not representable as \a T
 	/// \exception FE_OVERFLOW, ...UNDERFLOW, ...INEXACT according to rounding
-	template<typename T,std::float_round_style R,typename U> T half_cast(U arg) { return detail::half_caster<T,U,R>::cast(arg); }
+	template<class T,std::float_round_style R,class U> T half_cast(U arg) { return detail::half_caster<T,U,R>::cast(arg); }
 	/// \}
 
 	/// \}

@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+2.2.0 release (2020-10-14):
+---------------------------
+
+- Added direct assignment from any type
+- Added templated operators overloads to accept anything.
+  Args in them are will be converted to half and then used in regular operators for halfs.
+- Added useful CMakeLists. Special thanks to xtensor-stack (github) for useful examples in XTL;
+- Prepared for integration with xtensor-stack's repos like xtensor or xtl
+- Removed more obsolete code and defines
+
 2.1.1 release (2020-10-05):
 ---------------------------
 

@@ -28,7 +28,7 @@ straight-forward:
 
 ```C++
     using half_float::half;
-    half a(3.4), b(5);
+    half a = 3.4, b = 5;
     half c = a * b;
     c += 3;
     if(c > a)
@@ -39,7 +39,7 @@ Additionally the 'half_float' namespace also defines half-precision versions for
 directly through ADL:
 
 ```C++
-    half a(-3.14159);
+    half a = -3.14159;
     half s = sin(abs(a));
     long l = lround(s);
 ```
@@ -64,13 +64,9 @@ In contrast to the float-to-half conversion, which reduces precision, the conver
 The default rounding mode for conversions between half and more precise types as well as for rounding results of arithmetic operations and mathematical functions rounds to the nearest representable value. But by predefining the 'HALF_ROUND_STYLE' preprocessor symbol this default can be overridden with one of the other standard rounding modes using their respective constants or the equivalent values of 'std::float_round_style' (it can even be synchronized with the built-in single-precision implementation by defining it to 'std::numeric_limits<float>::round_style'):
 
   - 'std::round_indeterminate' (-1) for the fastest rounding.
-
   - 'std::round_toward_zero' (0) for rounding toward zero.
-
   - 'std::round_to_nearest' (1) for rounding to the nearest value (default).
-
   - 'std::round_toward_infinity' (2) for rounding toward positive infinity.
-
   - 'std::round_toward_neg_infinity' (3) for rounding toward negative infinity.
 
 In addition to changing the overall default rounding mode one can also use the 'half_cast'. This converts between half and any built-in arithmetic type using a configurable rounding mode (or the default rounding mode if none is specified). In addition to a configurable rounding mode, 'half_cast' has another big difference to a mere 'static_cast': Any conversions are performed directly using the given rounding mode, without any intermediate conversion to/from 'float'. This is especially relevant for conversions to integer types, which don't necessarily truncate anymore. But also for conversions from 'double' or 'long double' this may produce more precise results than a pre-conversion to 'float' using the single-precision implementation's current rounding mode would.
