@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cassert>
-#include "half.hpp"
+#include "half/half.hpp"
 
 int main(int, char**) {
     using half_float::half;

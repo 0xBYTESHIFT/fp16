@@ -1,0 +1,21 @@
+############################################################################
+# Copyright (c) Christian Rau, 0xBYTESHIFT                                 #
+#                                                                          #
+# Distributed under the terms of the MIT License.                          #
+#                                                                          #
+# The full license is in the file LICENSE, distributed with this software. #
+############################################################################
+
+# half cmake module
+# This module sets the following variables in your project::
+#
+#   half_FOUND - true if half found on the system
+#   half_INCLUDE_DIRS - the directory containing half headers
+#   half_LIBRARY - empty
+
+@PACKAGE_INIT@
+
+if(NOT TARGET @PROJECT_NAME@)
+    include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+    get_target_property(@PROJECT_NAME@_INCLUDE_DIRS @PROJECT_NAME@ INTERFACE_INCLUDE_DIRECTORIES)
+endif()

@@ -1,0 +1,8 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/include
+
+Name: half
+Description: half float (fp16) header-only library
+Version: @half_VERSION@
+Cflags: -I${includedir}
