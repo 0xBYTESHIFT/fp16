@@ -7,7 +7,7 @@
 ############################################################################
 
 cmake_minimum_required(VERSION 3.0.0)
-project(half VERSION 2.1.2)
+project(half VERSION 2.2.0)
 
 include(CTest)
 enable_testing()
