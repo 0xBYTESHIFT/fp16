@@ -1984,22 +1984,6 @@ namespace std {
 		/// \return hash value
 		result_type operator()(argument_type arg) const { return hash<half_float::detail::uint16>()(arg.data_&-static_cast<unsigned>(arg.data_!=0x8000)); }
 	};
-
-	/// is_floating_point specialization for half-precision floats.
-	template<> struct is_floating_point<half_float::half>:
-		std::integral_constant<bool, true> {};
-
-	/// is_scalar specialization for half-precision floats.
-	template<> struct is_scalar<half_float::half>:
-		std::integral_constant<bool, true> {};
-
-	/// is_arithmetic specialization for half-precision floats.
-	template<> struct is_arithmetic<half_float::half>:
-		std::integral_constant<bool, true> {};
-
-	/// is_signed specialization for half-precision floats.
-	template<> struct is_signed<half_float::half>:
-		std::integral_constant<bool, true> {};
 }
 
 namespace half_float {

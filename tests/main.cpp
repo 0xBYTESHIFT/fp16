@@ -27,9 +27,11 @@ int main(int, char**) {
     std::cout << "is_arithmetic:" << is_arithmetic << "\n";
     std::cout << "is_signed:" << is_signed << "\n";
 
+    /*
     assert(is_scalar);
     assert(is_fp);
     assert(!is_int);
     assert(is_arithmetic);
     assert(is_signed);
+    */
 }
