@@ -60,10 +60,6 @@
 #endif
 #include <cfenv>
 #include <functional>
-#if HALF_ENABLE_F16C_INTRINSICS
-	#include <immintrin.h>
-#endif
-
 
 #ifndef HALF_ENABLE_F16C_INTRINSICS
 	/// Enable F16C intruction set intrinsics.
@@ -73,6 +69,10 @@
 	///
 	/// Unless predefined it will be enabled automatically when the `__F16C__` symbol is defined, which some compilers do on supporting platforms.
 	#define HALF_ENABLE_F16C_INTRINSICS __F16C__
+#endif
+
+#if HALF_ENABLE_F16C_INTRINSICS
+	#include <immintrin.h>
 #endif
 
 #ifndef HALF_ERRHANDLING_OVERFLOW_TO_INEXACT
