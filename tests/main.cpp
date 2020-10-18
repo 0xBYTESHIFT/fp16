@@ -1,6 +1,36 @@
 #include <iostream>
 #include <cassert>
+#include "table.hpp"
 #include "half/half.hpp"
+
+template<class T>
+auto to_string(const T& val){
+    std::stringstream ss;
+    ss.precision(10);
+    ss << val;
+    return ss.str();
+};
+
+template<class T>
+auto gen_row(const std::string &name, cli_table &t){
+    auto dig = std::numeric_limits<T>::digits;
+    auto dig10 = std::numeric_limits<T>::digits10;
+    auto max_dig10 = std::numeric_limits<T>::max_digits10;
+    auto min_exp = std::numeric_limits<T>::min_exponent;
+    auto max_exp = std::numeric_limits<T>::max_exponent;
+    t.add_row<cli_table::row>({name,
+        to_string(std::numeric_limits<T>::min()),
+        to_string(std::numeric_limits<T>::max()),
+        to_string(std::numeric_limits<T>::lowest()),
+        to_string(std::numeric_limits<T>::epsilon()),
+        to_string(min_exp),
+        to_string(max_exp),
+        to_string(std::numeric_limits<T>::denorm_min()),
+        to_string(dig),
+        to_string(dig10),
+        to_string(max_dig10)
+    });
+}
 
 int main(int, char**) {
     using half_float::half;
@@ -26,6 +56,17 @@ int main(int, char**) {
     std::cout << "is_integral:" << is_int << "\n";
     std::cout << "is_arithmetic:" << is_arithmetic << "\n";
     std::cout << "is_signed:" << is_signed << "\n";
+    std::cout << "\n";
+
+    cli_table t;
+    using row = std::vector<std::string>; 
+    t.add_row<row>({"name", "min", "max", "lowest",
+        "eps", "min_exp", "max_exp",
+        "denorm_min", "dig", "dig10", "max_dig10"});
+    gen_row<half>("half", t);
+    gen_row<float>("float", t);
+    gen_row<double>("double", t);
+    std::cout << t << std::endl;
 
     /*
     assert(is_scalar);
