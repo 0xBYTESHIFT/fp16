@@ -123,4 +123,4 @@ This library is developed by CHRISTIAN RAU and released under the MIT License (s
 
 Additional credit goes to JEROEN VAN DER ZIJP for his paper on "Fast Half Float Conversions", whose algorithms have been used in the library for converting between half-precision and single-precision values.
 
-From v2.1.1 this library is maitained by 0xBYTESHIFT on github.com. Contact: 0xBYTESHIFT@gmail.com
+From v2.1.1 this copy of library is maitained by 0xBYTESHIFT on github.com. Please refer to the original on sourceforge for more stable and usable code.
